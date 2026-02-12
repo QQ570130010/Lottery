@@ -1,0 +1,160 @@
+﻿<!DOCTYPE html>
+
+
+
+
+<html lang="en">
+
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta charset="utf-8" />
+    <title>彩票选号机</title>
+    <!-- element-ui 引入样式 -->
+    <link rel="stylesheet" href="element-ui/css/index.css">
+
+    <link rel="stylesheet" href="Projects/css/swiper.css">
+    <link rel="stylesheet" href="Projects/css/chartTools.css">
+    <link rel="stylesheet" href="Projects/css/chartToolsImg.css">
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div class="flex flex-align pt5 pb5">
+            <div style="float:left;margin-left:2%" class="ax-radio-group flex mlauto gl_taba">
+                <label v-for="(item,i) in lotteryItemList" v-bind:key="'lotteryItem'+i"><input name="lotteryItem" v-bind:value="item.id" type="radio" v-model="selectRadio"><span>{{item.name}}</span></label>
+            </div>
+        </div>
+        <div class="wi-h5">
+            <div class="navbox mt10" v-if="selectItem.rd.show">
+                <p class="split-line m10"><i><b class="fcol3">{{selectItem.rd.title}}</b></i></p>
+                <div style="width:60%" class="ball flex flex-wrap select ball-col">
+                    <b v-for="(item,i) in selectItem.rd.list" v-on:click="selectBall(selectItem,item,'rd')" v-bind:key="'rd'+i" v-bind:class="getBallClasses(item,'red')">{{item.ball}}</b>
+                </div>
+                <input v-model="mySelectItem.rdCount" type="number" :min="0" :max="rdMaxCount" class="mb5 tac" style="width: 5rem;margin-left: 12px;">
+                <button v-on:click="randomAnList('rd')" class="btn-d btn-p mr10"><i class="svg-icon icon-success mr5"></i>随机胆</button>
+            </div>
+            <div class="navbox mt10" v-if="selectItem.rt.show">
+                <p class="split-line m10"><i><b class="fcol3">{{selectItem.rt.title}}</b></i></p>
+                <div style="width:60%" class="ball flex flex-wrap select ball-col">
+                    <b v-for="(item,i) in selectItem.rt.list" v-on:click="selectBall(selectItem,item,'rt')" v-bind:key="'rt'+i" v-bind:class="getBallClasses(item,'red')">{{item.ball}}</b>
+                </div>
+                <input v-model="mySelectItem.rtCount" type="number" :min="rtMinCount" :max="rtMaxCount" class="mb5 tac" style="width: 5rem;margin-left: 12px;">
+                <button v-on:click="randomAnList('rt')" class="btn-d btn-p mr10"><i class="svg-icon icon-success mr5"></i>随机拖</button>
+            </div>
+            <div class="navbox mt10" v-if="selectItem.bd.show">
+                <p class="split-line m10"><i><b class="fcol3">{{selectItem.bd.title}}</b></i></p>
+                <div class="ball flex flex-wrap select ball-col pt0">
+                    <b v-for="(item,i) in selectItem.bd.list" v-on:click="selectBall(selectItem,item,'bd')" v-bind:key="'bd'+i" v-bind:class="getBallClasses(item,'blue')">{{item.ball}}</b>
+                </div>
+                <input v-model="mySelectItem.bdCount" type="number" :min="0" :max="bdMaxCount" class="mb5 tac" style="width: 5rem;margin-left: 12px;">
+                <button v-on:click="randomAnList('bd')" class="btn-d btn-p mr10"><i class="svg-icon icon-success mr5"></i>随机胆</button>
+            </div>
+
+            <div class="navbox mt10" v-if="selectItem.bt.show">
+                <p class="split-line m10"><i><b class="fcol3">{{selectItem.bt.title}}</b></i></p>
+                <div class="ball flex flex-wrap select ball-col pt0">
+                    <b v-for="(item,i) in selectItem.bt.list" v-on:click="selectBall(selectItem,item,'bt')" v-bind:key="'bt'+i" v-bind:class="getBallClasses(item,'blue')">{{item.ball}}</b>
+                </div>
+                <input v-model="mySelectItem.btCount" type="number" :min="btMinCount" :max="btMaxCount" class="mb5 tac" style="width: 5rem;margin-left: 12px;">
+                <button v-on:click="randomAnList('bt')" class="btn-d btn-p mr10"><i class="svg-icon icon-success mr5"></i>随机拖</button>
+            </div>
+        </div>
+        <div class="wi-h5">
+            <div class="navbox mt10">
+                <div class="nav pt10">
+                    <div class="flex flex-align pr10 pl10 flex-wrap mb5">
+                        <i class="mb5">{{selectItem.rd.title}}个数：</i>
+                        <input v-model="mySelectItem.rdCount" type="number" :min="0" :max="rdMaxCount" class="mb5 tac" style="width: 5rem">&nbsp;&nbsp;
+                        <i class="mb5">{{selectItem.rt.title}}个数：</i>
+                        <input v-model="mySelectItem.rtCount" type="number" :min="rtMinCount" :max="rtMaxCount" class="mb5 tac" style="width: 5rem">&nbsp;&nbsp;
+                        <br/>
+                        <i class="mb5" v-if="selectItem.bd.show">{{selectItem.bd.title}}个数：</i>
+                        <input v-if="selectItem.bd.show" v-model="mySelectItem.bdCount" type="number" :min="0" :max="bdMaxCount" class="mb5 tac" style="width: 5rem">&nbsp;&nbsp;
+                        <i class="mb5">{{selectItem.bt.title}}个数：</i>
+                        <input v-model="mySelectItem.btCount" type="number" :min="btMinCount" :max="btMaxCount" class="mb5 tac" style="width: 5rem">&nbsp;&nbsp;
+                    </div>
+                    <div class="flex flex-align pr10 pl10 flex-wrap mb5">
+                        <i class="mb5">总注数：{{resultItem.totalZhuShu}}</i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <i class="mb5">花费：{{resultItem.money.toFixed(2)}}</i>
+                    </div>
+
+                    <div class="flex flex-justify pt10 pb10 linet">
+                        <button v-on:click="submitButtonClick()" class="btn-d btn-p mr10" id="sub"><i class="svg-icon icon-success mr5"></i>确定选号</button>
+                        <button class="btn-d btn-g mr5 ml5 " v-on:click="resetBalls() "><i class="svg-icon icon-copy mr5 "></i>清除</button>
+                        <button v-if="0" class="btn-d btn-g"><i class="svg-icon icon-redo fcol6 mr5"></i>重设条件</button>
+                    </div>
+                    <div v-if="0" class="flex flex-align pr10 pl10 flex-wrap mb5">
+                        <label class="ax-checkbox mb5"><input name="sel" value="1" type="checkbox" checked=""><span>红球全选</span></label>
+                        <label class="ax-checkbox mb5"><input name="sel" value="2" type="checkbox" checked=""><span>蓝球全选</span></label>
+                        <i class="mb5">请输入生成注数，必须小于1000：</i>
+                        <input type="text" class="mb5 tac" style="width: 5rem" value="100" id="zhu">
+                    </div>
+                    <div v-if="0" class="flex flex-align pr10 pl10 ax-radio-group chera flex-wrap mb5">
+                        <b class="mb5">红号奇偶比：</b>
+                        <label class="mb5"><input name="job" value="0:6" type="checkbox"><span>0:6</span></label>
+                        <label class="mb5"><input name="job" value="1:5" type="checkbox"><span>1:5</span></label>
+                        <label class="mb5"><input name="job" value="2:4" type="checkbox"><span>2:4</span></label>
+                        <label class="mb5"><input name="job" value="3:3" type="checkbox"><span>3:3</span></label>
+                        <label class="mb5"><input name="job" value="4:2" type="checkbox"><span>4:2</span></label>
+                        <label class="mb5"><input name="job" value="5:1" type="checkbox"><span>5:1</span></label>
+                        <label class="mb5"><input name="job" value="6:0" type="checkbox"><span>6:0</span></label>
+                    </div>
+                    <div v-if="0" class="flex flex-align pr10 pl10 ax-radio-group chera flex-wrap mb5">
+                        <b class="mb5">红号大小比：</b>
+                        <label class="mb5"><input name="dxb" value="0:6" type="checkbox"><span>0:6</span></label>
+                        <label class="mb5"><input name="dxb" value="1:5" type="checkbox"><span>1:5</span></label>
+                        <label class="mb5"><input name="dxb" value="2:4" type="checkbox"><span>2:4</span></label>
+                        <label class="mb5"><input name="dxb" value="3:3" type="checkbox"><span>3:3</span></label>
+                        <label class="mb5"><input name="dxb" value="4:2" type="checkbox"><span>4:2</span></label>
+                        <label class="mb5"><input name="dxb" value="5:1" type="checkbox"><span>5:1</span></label>
+                        <label class="mb5"><input name="dxb" value="6:0" type="checkbox"><span>6:0</span></label>
+                    </div>
+                    <div v-if="0" class="flex flex-align pr10 pl10 ax-radio-group chera flex-wrap mb5">
+                        <b class="mb5">红号质合比：</b>
+                        <label class="mb5"><input name="zhb" value="0:6" type="checkbox"><span>0:6</span></label>
+                        <label class="mb5"><input name="zhb" value="1:5" type="checkbox"><span>1:5</span></label>
+                        <label class="mb5"><input name="zhb" value="2:4" type="checkbox"><span>2:4</span></label>
+                        <label class="mb5"><input name="zhb" value="3:3" type="checkbox"><span>3:3</span></label>
+                        <label class="mb5"><input name="zhb" value="4:2" type="checkbox"><span>4:2</span></label>
+                        <label class="mb5"><input name="zhb" value="5:1" type="checkbox"><span>5:1</span></label>
+                        <label class="mb5"><input name="zhb" value="6:0" type="checkbox"><span>6:0</span></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wi-h5">
+            <div>
+                <textarea rows="4" v-bind:value="str1"></textarea>
+            </div>
+            <div>
+                <textarea rows="10" v-bind:value="str2"></textarea>
+            </div>
+            <div class="flex flex-justify pt10">
+                <div v-if="1" class="flex flex-align pr10 pl10 ax-radio-group chera flex-wrap mb5">
+                    <label class="mb5"><input name="zhb" v-model="blwbk" type="checkbox"><span>保留号码</span></label>
+                </div>
+                <input v-model="sizs" type="number" :min="1" class="mb5 tac" style="width: 5rem">
+                <button v-on:click="sjNz() " class="btn-d btn-p mr10 "><i class="svg-icon icon-success mr5 "></i>随机N注</button>
+
+                <button v-on:click="randomBalls(1) " class="btn-d btn-p mr10 "><i class="svg-icon icon-success mr5 "></i>随机1注</button>
+                <button v-on:click="randomBalls(5) " class="btn-d btn-p mr10 "><i class="svg-icon icon-success mr5 "></i>随机5注</button>
+                <button v-on:click="randomBalls(10) " class="btn-d btn-p mr10 "><i class="svg-icon icon-success mr5 "></i>随机10注</button>
+                <button class="btn-d btn-p mr5 ml5 " disabled=" " id="copy-nums "><i class="svg-icon icon-copy ml5 mr5 "></i>复制号码</button>
+                <button class="btn-d btn-g mr5 ml5 " v-on:click="clearNums() "><i class="svg-icon icon-copy mr5 "></i>清除</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="jquery/jquery-3.2.1.js "></script>
+    <script src="vue/vue.js "></script>
+    <script src="vue/vue-resource@1.5.1.js "></script>
+
+    <script src="loadsh/lodash.js "></script>
+    <script src="element-ui/js/index.js "></script>
+
+    <script src="Projects/js/main.js "></script>
+
+
+</body>
+
+</html>
